@@ -27,7 +27,7 @@ data = pd.concat(xpts, axis=1)
 data.index = pd.Index(data.index.values.astype(int), name="SEQN")
 
 # save raw data
-data.to_csv("NHANES_2017_data.txt", sep="\t")
+data.to_csv("NHANES_2017_data.txt", sep="\t", na_rep="nan")
 print(data)
 
 # blood pressure
@@ -124,6 +124,6 @@ variables.update({v : data[k] for k,v in numerical.items()})
 
 # compile and save
 vars = pd.DataFrame(variables, index=pd.Index(data.index.values, name="id"))
-vars.to_csv("regression_variables.txt", sep="\t")
+vars.to_csv("regression_variables.txt", sep="\t", na_rep="nan")
 
 print(vars)
