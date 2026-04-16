@@ -11,6 +11,7 @@ xpts = [
     get_xpt("DBQ", ["DBQ700"]),
     get_xpt("PAQ", ["PAQ605", "PAQ610", "PAD615", "PAQ620", "PAQ625", "PAD630", "PAQ650", "PAQ655", "PAD660", "PAQ665", "PAQ670", "PAD675", "PAD680"]),
     get_xpt("SLQ", ["SLD012", "SLD013"]),
+    get_xpt("SMQ", ["SMQ040"]),
     get_xpt("BPQ", ["BPQ020"]),
     get_xpt("CDQ", ["CDQ001"]),
     get_xpt("DIQ", ["DIQ010"]),
@@ -104,6 +105,12 @@ variables.update({
     "vigRec" : sort_pa("PAQ650", "PAQ655"),
     "modRec" : sort_pa("PAQ665", "PAQ670"),
     "sedentary" : data["PAD680"],
+})
+
+# smoking
+variables.update({
+    "smokeEveryDay" : (data["SMQ040"] == 1).astype(int),
+    "smokeSomeDays" : (data["SMQ040"] == 2).astype(int),
 })
 
 # numerical
