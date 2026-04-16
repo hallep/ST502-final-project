@@ -34,8 +34,8 @@ print(data)
 data["BPXSY"] = data[["BPXSY1", "BPXSY2", "BPXSY3", "BPXSY4"]].median(axis=1, skipna=True)
 data["BPXDI"] = data[["BPXDI1", "BPXDI2", "BPXDI3", "BPXDI4"]].median(axis=1, skipna=True)
 
-# remove subjects < 20 years old
-data = data[data["RIDAGEYR"] >= 20]
+# remove subjects < 24 years old
+data = data[data["RIDAGEYR"] >= 24]
 
 # Clean data for regression
 variables = {
