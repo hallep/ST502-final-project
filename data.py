@@ -64,21 +64,6 @@ variables = {
     "incomePoverty" : data["INDFMPIR"],
 }
 
-# binary indicators
-binary = {
-    "BPQ020" : "highBP", 
-    "CDQ001" : "chestPain", 
-    "DIQ010" : "diabetes", 
-    "MCQ160C" : "CoronaryHD", 
-    "MCQ160E" : "heartAttack", 
-    "MCQ160F" : "stroke", 
-    "MCQ160M" : "thyroidProblem", 
-    "MCQ160G" : "emphysema", 
-    "MCQ160O" : "COPD", 
-    "MCQ160L" : "liverCondition"
-}
-variables.update({v : (data[k] == 1).astype(int) for k,v in binary.items()})
-
 # alcohol
 variables.update({
     "dailyAlc" : data["ALQ121"].isin([1]).astype(int),
@@ -121,13 +106,28 @@ numerical = {
     "BPXPLS" : "pulse",
     "BPXSY" : "systolicBP",
     "BPXDI" : "diastolicBP",
-    "BMXBMI" : "BMI",
+    "BMXBMI" : "bmi",
     "LBXTC" : "cholesterol",
     "LBXFER" : "ferritin",
     "LBDRFO" : "folate",
     "LBXIN" : "insulin",
 }
 variables.update({v : data[k] for k,v in numerical.items()})
+
+# binary indicators
+binary = {
+    "BPQ020" : "highBP", 
+    "CDQ001" : "chestPain", 
+    "DIQ010" : "diabetes", 
+    "MCQ160C" : "coronaryHD", 
+    "MCQ160E" : "heartAttack", 
+    "MCQ160F" : "stroke", 
+    "MCQ160M" : "thyroidProblem", 
+    "MCQ160G" : "emphysema", 
+    "MCQ160O" : "COPD", 
+    "MCQ160L" : "liverCondition"
+}
+variables.update({v : (data[k] == 1).astype(int) for k,v in binary.items()})
 
 # compile and save
 vars = pd.DataFrame(variables, index=pd.Index(data.index.values, name="id"))
