@@ -7,7 +7,7 @@ def get_xpt(name:str, cols:list[str]) -> pd.DataFrame:
 xpts = [
     get_xpt("DEMO", ["RIAGENDR", "RIDAGEYR", "RIDRETH3", "DMDEDUC2", "DMDMARTL", "INDFMPIR"]),
     get_xpt("ALQ", ["ALQ111", "ALQ121"]),
-    get_xpt("BPX", ["BPXCHR", "BPXPLS", "BPXSY1", "BPXSY2", "BPXSY3", "BPXSY4", "BPXDI1", "BPXDI2", "BPXDI3", "BPXDI4"]),
+    get_xpt("BPX", ["BPXPLS", "BPXSY1", "BPXSY2", "BPXSY3", "BPXSY4", "BPXDI1", "BPXDI2", "BPXDI3", "BPXDI4"]),
     get_xpt("DBQ", ["DBQ700"]),
     get_xpt("PAQ", ["PAQ605", "PAQ610", "PAD615", "PAQ620", "PAQ625", "PAD630", "PAQ650", "PAQ655", "PAD660", "PAQ665", "PAQ670", "PAD675", "PAD680"]),
     get_xpt("SLQ", ["SLD012", "SLD013"]),
@@ -19,8 +19,6 @@ xpts = [
     get_xpt("BMX", ["BMXBMI"]),
     get_xpt("TCHOL", ["LBXTC"]),
     get_xpt("FERTIN", ["LBXFER"]),
-    get_xpt("FOLATE", ["LBDRFO"]),
-    get_xpt("INS", ["LBXIN", "LBDINLC"]),
 ]
 
 # Combine datasets
@@ -101,15 +99,12 @@ variables.update({
 numerical = {
     "SLD012" : "sleepWeekdays",
     "SLD013" : "sleepWeekends",
-    "BPXCHR" : "heartrate",
     "BPXPLS" : "pulse",
     "BPXSY" : "systolicBP",
     "BPXDI" : "diastolicBP",
     "BMXBMI" : "bmi",
     "LBXTC" : "cholesterol",
     "LBXFER" : "ferritin",
-    "LBDRFO" : "folate",
-    "LBXIN" : "insulin",
 }
 variables.update({v : data[k] for k,v in numerical.items()})
 
@@ -129,7 +124,7 @@ binary = {
 variables.update({v : (data[k] == 1).astype(int) for k,v in binary.items()})
 
 # compile and save
-vars = pd.DataFrame(variables, index=pd.Index(data.index.values, name="id"))
+vars = pd.DataFrame(variables, index=pd.Index(data.index.values, name="id")).dropna(axis=0)
 vars.to_csv("regression_variables.txt", sep="\t", na_rep="nan")
 
 print(vars)
