@@ -49,11 +49,10 @@ variables = {
     "asian" : (data["RIDRETH3"] == 6).astype(int),
     "otherRace" : (data["RIDRETH3"] == 7).astype(int),
 
-    "noHS" : (data["DMDEDUC2"] == 1).astype(int),
     "someHS" : (data["DMDEDUC2"] == 2).astype(int),
-    "HSGrad" : (data["DMDEDUC2"] == 4).astype(int),
-    "someCollege" : (data["DMDEDUC2"] == 6).astype(int),
-    "collegeGrad" : (data["DMDEDUC2"] == 7).astype(int),
+    "HSGrad" : (data["DMDEDUC2"] == 3).astype(int),
+    "someCollege" : (data["DMDEDUC2"] == 4).astype(int),
+    "collegeGrad" : (data["DMDEDUC2"] == 5).astype(int),
 
     "married" : (data["DMDMARTL"] == 1).astype(int),
     "widowed" : (data["DMDMARTL"] == 2).astype(int),
