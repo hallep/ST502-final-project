@@ -1,6 +1,3 @@
-# ============================================================
-# LIBRARIES
-# ============================================================
 library(glmnet)
 library(pROC)
 
@@ -33,7 +30,8 @@ y_test  <- y[-train_index]
 alphas <- seq(0, 1, by = 0.1)
 
 cv_results <- lapply(alphas, function(a) {
-  cv.glmnet(X_train, y_train, alpha = a, family = "binomial")
+  cv.glmnet(X_train, y_train, alpha = a, family = "binomial",
+            nfolds = 5)   # <-- ADDED
 })
 
 cv_errors <- sapply(cv_results, function(model) min(model$cvm))
@@ -44,7 +42,8 @@ cat("Best alpha:", best_alpha, "\n")
 #training
 final_model <- cv.glmnet(X_train, y_train,
                          alpha = best_alpha,
-                         family = "binomial")
+                         family = "binomial",
+                         nfolds = 5)   # <-- ADDED
 
 #pred
 test_pred <- predict(final_model,
@@ -58,7 +57,7 @@ auc_val <- auc(roc_obj)
 
 cat("Final Test AUC:", auc_val, "\n")
 
-plot(roc_obj, main = "Elastic Net ROC Curve (Test Set)", col = "blue", lwd = 2)
+plot(roc_obj, main = "Elastic Net ROC Curve (Test Set)", col = "yellow", lwd = 2)
 
 #check overfitting
 train_pred <- predict(final_model,
@@ -83,3 +82,6 @@ nonzero <- coefs[coefs != 0, , drop = FALSE]
 
 cat("\nNon-zero coefficients:\n")
 print(nonzero)
+
+cat("Lambda (min):", final_model$lambda.min, "\n")
+cat("Lambda (1se):", final_model$lambda.1se, "\n")
