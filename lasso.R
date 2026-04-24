@@ -27,7 +27,8 @@ y_test  <- y[-train_index]
 
 lasso_model <- cv.glmnet(X_train, y_train,
                          alpha = 1,          # <-- LASSO
-                         family = "binomial")
+                         family = "binomial",
+                         nfolds = 5)         # <-- ADDED (5-fold CV)
 
 test_pred <- predict(lasso_model,
                      newx = X_test,
@@ -61,3 +62,6 @@ nonzero <- coefs[coefs != 0, , drop = FALSE]
 
 cat("\nNon-zero coefficients:\n")
 print(nonzero)
+
+cat("Lambda (min):", final_model$lambda.min, "\n")
+cat("Lambda (1se):", final_model$lambda.1se, "\n")
