@@ -27,7 +27,8 @@ y_test  <- y[-train_index]
 
 ridge_model <- cv.glmnet(X_train, y_train,
                          alpha = 0,          # <-- THIS makes it ridge
-                         family = "binomial")
+                         family = "binomial",
+                         nfolds = 5)         # <-- ADDED (5-fold CV)
 
 test_pred <- predict(ridge_model,
                      newx = X_test,
@@ -39,7 +40,7 @@ auc_val <- auc(roc_obj)
 
 cat("Final Test AUC:", auc_val, "\n")
 
-plot(roc_obj, main = "Ridge ROC Curve (Test Set)", col = "blue", lwd = 2)
+plot(roc_obj, main = "Ridge ROC Curve (Test Set)", col = "red", lwd = 2)
 
 train_pred <- predict(ridge_model,
                       newx = X_train,
@@ -59,3 +60,6 @@ coefs <- as.matrix(coef(ridge_model, s = "lambda.min"))
 
 cat("\nCoefficients:\n")
 print(coefs)
+
+cat("Lambda (min):", final_model$lambda.min, "\n")
+cat("Lambda (1se):", final_model$lambda.1se, "\n")
