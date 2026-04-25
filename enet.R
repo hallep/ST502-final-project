@@ -4,6 +4,9 @@ library(pROC)
 vars <- read.table("C:/Users/Ko Ago/Downloads/regression_variables (1).txt",
                    header = TRUE, sep = "\t", na.strings = "nan")
 
+# convert sedentary from minutes to hours
+vars$sedentary <- vars$sedentary / 60
+
 y <- as.numeric(vars$highBP)
 
 X <- vars[, !(names(vars) %in% c("id", "highBP"))]
@@ -57,7 +60,7 @@ auc_val <- auc(roc_obj)
 
 cat("Final Test AUC:", auc_val, "\n")
 
-plot(roc_obj, main = "Elastic Net ROC Curve (Test Set)", col = "yellow", lwd = 2)
+plot(roc_obj, main = "Elastic Net ROC Curve (Test Set)", col = "blue", lwd = 2)
 
 #check overfitting
 train_pred <- predict(final_model,
