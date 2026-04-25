@@ -4,6 +4,9 @@ library(pROC)
 vars <- read.table("C:/Users/Ko Ago/Downloads/regression_variables (1).txt",
                    header = TRUE, sep = "\t", na.strings = "nan")
 
+# convert sedentary from minutes to hours
+vars$sedentary <- vars$sedentary / 60
+
 y <- as.numeric(vars$highBP)
 
 X <- vars[, !(names(vars) %in% c("id", "highBP"))]
@@ -61,5 +64,5 @@ coefs <- as.matrix(coef(ridge_model, s = "lambda.min"))
 cat("\nCoefficients:\n")
 print(coefs)
 
-cat("Lambda (min):", final_model$lambda.min, "\n")
-cat("Lambda (1se):", final_model$lambda.1se, "\n")
+cat("Lambda (min):", ridge_model$lambda.min, "\n")
+cat("Lambda (1se):", ridge_model$lambda.1se, "\n")
