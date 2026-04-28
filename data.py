@@ -86,7 +86,7 @@ variables.update({
     "modWork" : sort_pa("PAQ620", "PAQ625"),
     "vigRec" : sort_pa("PAQ650", "PAQ655"),
     "modRec" : sort_pa("PAQ665", "PAQ670"),
-    "sedentary" : data["PAD680"],
+    "sedentary" : data["PAD680"] / 60,
 })
 
 # smoking

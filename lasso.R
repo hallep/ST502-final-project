@@ -3,11 +3,7 @@ library(pROC)
 #install.packages("grpreg")
 library(grpreg)
 
-vars <- read.table("C:/Users/Ko Ago/Downloads/regression_variables (1).txt",
-                   header = TRUE, sep = "\t", na.strings = "nan")
-
-# convert sedentary from minutes to hours
-vars$sedentary <- vars$sedentary / 60
+vars <- read.table("regression_variables.txt", header = TRUE, sep = "\t", na.strings = "nan")
 
 y <- as.numeric(vars$highBP)
 
