@@ -1,18 +1,18 @@
 library(glmnet)
+library(pls)
 library(pROC)
 
 #read data
 vars <- read.table("regression_variables.txt", header = TRUE, sep = "\t", na.strings = "nan")
 
-#setting variables
-y <- vars$highBP
-y <- as.numeric(y)
+# setting variables
+y <- as.numeric(vars$highBP)
 
-#making the matrix and remove highBP since it's Y
-X <- vars[, !(names(vars) %in% c("id", "highBP"))]
+# making the matrix and remove highBP since it's Y
+X <- as.matrix(vars[, !(names(vars) %in% c("id", "highBP"))])
 
-#matrix conversion
-X <- as.matrix(X)
+# all regression variables
+xy <- vars[, !(names(vars) %in% "id")]
 
 #set seed but will change, best alpha for 123 was 0.9 for 67 it was 1 and 0.7 for 777
 set.seed(777) #seed 1 also has best alpha = 1
@@ -22,19 +22,25 @@ cv_model <- cv.glmnet(X, y, family = "binomial", alpha = 0)
 cv_lasso <- cv.glmnet(X, y, family = "binomial", alpha = 1) 
 cv_enet  <- cv.glmnet(X, y, family = "binomial", alpha = 0.5) 
 
+nc = 10
+model_pcr <- pcr(highBP ~ ., ncomp = nc, data = xy, scale = TRUE, validation = "CV")
+
 #predictions
 pred_ridge <- predict(cv_model, newx = X, s = "lambda.min", type = "link")
 pred_lasso <- predict(cv_lasso, newx = X, s = "lambda.min", type = "link")
 pred_enet  <- predict(cv_enet,  newx = X, s = "lambda.min", type = "link")
+pred_pcr   <- predict(model_pcr, xy, ncomp = nc)
 
 #Roc & Auc
 roc_ridge <- roc(y, as.vector(pred_ridge))
 roc_lasso <- roc(y, as.vector(pred_lasso))
 roc_enet  <- roc(y, as.vector(pred_enet))
+roc_pcr   <- roc(xy$highBP, pred_pcr)
 
 auc_ridge <- auc(roc_ridge)
 auc_lasso <- auc(roc_lasso)
 auc_enet  <- auc(roc_enet)
+auc_pcr   <- auc(roc_pcr)
 
 #Betas
 ridge_coefs <- as.matrix(coef(cv_model, s = "lambda.min"))
@@ -101,14 +107,20 @@ print(enet_coefs[enet_coefs != 0, , drop = FALSE])
 
 plot(roc_enet, col = "darkgreen", lwd = 2, main = "ROC - Elastic Net")
 
+#PCR
+cat("\n===== PRINCIPAL COMPONENT REGRESSION =====\n")
+cat("AUC:", auc_pcr, "\n")
+plot(roc_pcr, col = "darkorange", lwd = 2, main = "ROC - PCR")
+
 #ROC Curves overlay
 plot(roc_ridge, col="blue", lwd=2)
 plot(roc_lasso, col="red", lwd=2, add=TRUE)
 plot(roc_enet, col="darkgreen", lwd=2, add=TRUE)
+plot(roc_pcr, col="darkorange", lwd=2, add=TRUE)
 
 legend("bottomright",
-       legend=c("Ridge","Lasso","Elastic Net"),
-       col=c("blue","red","darkgreen"),
+       legend=c("Ridge","Lasso","Elastic Net", "Principle Component Regression"),
+       col=c("blue","red","darkgreen", "darkorange"),
        lwd=2)
 
 

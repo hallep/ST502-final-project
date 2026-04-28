@@ -24,7 +24,7 @@ trainData = vars[trainIdx, ]
 testData = vars[-trainIdx, ]
 
 # ===== PCR model ===== #
-model <- pcr(highBP ~ ., data = trainData, ncomp = n, scale = TRUE, validation = "CV")
+model = pcr(highBP ~ ., data = trainData, ncomp = n, scale = TRUE, validation = "CV")
 
 m = 4
 
@@ -97,7 +97,7 @@ pLoad = ggplot(load, aes(x = component, y = variable, fill = load)) +
 
 # ===== Predict ===== #
 
-pred_pcr = predict(model, testData, ncomp=m)
+pred_pcr = predict(model, testData, ncomp=n)
 
 # ROC
 roc_pcr = roc(testData$highBP, pred_pcr)
@@ -109,17 +109,35 @@ curve = data.frame(
 )
 
 pROC = ggplot(curve, aes(x = Specificity, y = Sensitivity)) + 
-  geom_abline(intercept = 1, slope = 1, color = "gray", linewidth = 0.5) +
-  geom_line(color = "orange", linewidth = 0.8) + 
+  geom_abline(intercept = 1, slope = 1, color = "dimgray", linewidth = 0.5) +
+  geom_line(color = "darkorange", linewidth = 0.8) + 
   labs(title = "ROC Curve (Test Set)", x = "Specificity", y = "Sensitivity") +
   scale_x_reverse() + theme_classic()
 
+# AUC
+model_full = pcr(highBP ~ ., data = trainData, ncomp = n, scale = TRUE, validation = "CV")
+
+x = c()
+y = c()
+
+for (i in n:1) {
+  pred = predict(model_full, testData, ncomp=i)
+  roc_obj = roc(testData$highBP, pred)
+  
+  x = c(x, i)
+  y = c(y, auc(roc_obj))
+}
+
+area = data.frame("ncomps" = x, "auc" = y)
+
+pAUC = ggplot(area, aes(x = ncomps, y = auc)) + 
+  geom_vline(xintercept = m, color = "dimgray", linewidth = 0.5, linetype = "dashed") +
+  geom_line(color = "hotpink", linewidth = 0.8) + 
+  labs(title = "Area Under Curve", x = "Number of Components", y = "Area Under Curve") +
+  theme_classic()
+
 # ===== Plots ===== #
 
-(pErr + pR2) / (pX + pROC)
+(pErr + pR2) / (pROC + pAUC)
+pX
 pLoad
-
-# pErr
-# pR2
-# pX
-# pROC
