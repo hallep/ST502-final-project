@@ -1,18 +1,14 @@
-install.packages("glmnet")
-install.packages("pROC")
-
 library(glmnet)
 library(pROC)
 
 #read data
-vars <- read.table("C:/Users/Ko Ago/Downloads/regression_variables (1).txt",
-                   header = TRUE, sep = "\t", na.strings = "nan")
+vars <- read.table("regression_variables.txt", header = TRUE, sep = "\t", na.strings = "nan")
 
 #setting variables
 y <- vars$highBP
 y <- as.numeric(y)
 
-#making the matrix and remove highbp since it's Y
+#making the matrix and remove highBP since it's Y
 X <- vars[, !(names(vars) %in% c("id", "highBP"))]
 
 #matrix conversion
