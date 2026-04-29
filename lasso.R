@@ -5,6 +5,24 @@ library(grpreg)
 
 vars <- read.table("regression_variables.txt", header = TRUE, sep = "\t", na.strings = "nan")
 
+# delete specified variables
+vars <- vars[, !(names(vars) %in% c(
+  "stroke",
+  "heartAttack",
+  "coronaryHD",
+  "chestPain",
+  "emphysema",
+  "COPD",
+  "liverCondition",
+  "systolicBP",
+  "diastolicBP"
+))]
+
+# check remaining variables
+names(vars)
+dim(vars)
+
+
 y <- as.numeric(vars$highBP)
 
 X <- vars[, !(names(vars) %in% c("id", "highBP"))]
@@ -67,9 +85,26 @@ print(nonzero)
 cat("Lambda (min):", lasso_model$lambda.min, "\n")
 cat("Lambda (1se):", lasso_model$lambda.1se, "\n")
 
+cat("LASSO AUC:", auc(roc_obj), "\n")
+
+coefs_lasso <- as.matrix(coef(lasso_model, s = "lambda.min"))
+
+# remove intercept
+coefs_no_intercept <- coefs_lasso[-1, , drop = FALSE]
+
+num_zero <- sum(coefs_no_intercept == 0)
+num_nonzero <- sum(coefs_no_intercept != 0)
+total <- length(coefs_no_intercept)
+
+cat("LASSO Sparsity:\n")
+cat("Non-zero:", num_nonzero, "\n")
+cat("Zero:", num_zero, "\n")
+cat("Sparsity (% zero):", round(100 * num_zero / total, 2), "%\n\n")
+
+
 # GROUP LASSO
 
-race_vars <- c("black", "hispanic", "asian", "otherrace", "mexAmer")
+race_vars <- c("black", "hispanic", "asian", "otherRace", "mexAmer")
 
 group <- 1:ncol(X_train)
 col_names <- colnames(X_train)
@@ -79,28 +114,57 @@ race_group_id <- max(group) + 1
 group[col_names %in% race_vars] <- race_group_id
 
 # fit group lasso
-group_lasso_model <- cv.grpreg(X_train, y_train,
-                               group = group,
-                               family = "binomial",
-                               penalty = "grLasso")
+group_lasso_model <- cv.grpreg(
+  X_train, y_train,
+  group = group,
+  family = "binomial",
+  penalty = "grLasso"
+)
 
 # predictions
-test_pred_grp <- predict(group_lasso_model,
-                         X_test,
-                         lambda = group_lasso_model$lambda.min,
-                         type = "response")
+test_pred_grp <- predict(
+  group_lasso_model,
+  X_test,
+  lambda = group_lasso_model$lambda.min,
+  type = "response"
+)
 
 # AUC
 roc_grp <- roc(y_test, as.vector(test_pred_grp))
 auc_grp <- auc(roc_grp)
 
-cat("Group LASSO Test AUC:", auc_grp, "\n")
+cat("Group LASSO Test AUC:", round(auc_grp, 4), "\n")
 
 # plot ROC
-plot(roc_grp, main = "Group LASSO ROC Curve (Test Set)", col = "green", lwd = 2)
+plot(roc_grp,
+     main = "Group LASSO ROC Curve (Test Set)",
+     col = "green", lwd = 2)
 
 # coefficients
-coefs_grp <- coef(group_lasso_model, lambda = group_lasso_model$lambda.min)
+coefs_grp <- as.matrix(coef(
+  group_lasso_model,
+  lambda = group_lasso_model$lambda.min
+))
 
-cat("\nGroup LASSO Coefficients:\n")
-print(coefs_grp)
+# print ONLY non-zero coefficients
+nonzero_grp <- coefs_grp[coefs_grp != 0, , drop = FALSE]
+
+cat("\nGroup LASSO Non-zero Coefficients:\n")
+print(nonzero_grp)
+
+# sparsity counts (excluding intercept)
+coef_no_intercept <- coefs_grp[-1, , drop = FALSE]
+
+num_zero <- sum(coef_no_intercept == 0)
+num_nonzero <- sum(coef_no_intercept != 0)
+total <- length(coef_no_intercept)
+
+cat("\nGroup LASSO Sparsity:\n")
+cat("Non-zero:", num_nonzero, "\n")
+cat("Zero:", num_zero, "\n")
+cat("Sparsity (% zero):",
+    round(100 * num_zero / total, 2), "%\n")
+
+# lambda values
+cat("\nLambda Min:", group_lasso_model$lambda.min, "\n")
+
