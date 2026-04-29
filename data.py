@@ -6,16 +6,15 @@ def get_xpt(name:str, cols:list[str]) -> pd.DataFrame:
 # Get columns from datasets
 xpts = [
     get_xpt("DEMO", ["RIAGENDR", "RIDAGEYR", "RIDRETH3", "DMDEDUC2", "DMDMARTL", "INDFMPIR"]),
-    get_xpt("ALQ", ["ALQ111", "ALQ121"]),
-    get_xpt("BPX", ["BPXPLS", "BPXSY1", "BPXSY2", "BPXSY3", "BPXSY4", "BPXDI1", "BPXDI2", "BPXDI3", "BPXDI4"]),
+    get_xpt("ALQ", ["ALQ121"]),
+    get_xpt("BPQ", ["BPQ020"]),
     get_xpt("DBQ", ["DBQ700"]),
-    get_xpt("PAQ", ["PAQ605", "PAQ610", "PAD615", "PAQ620", "PAQ625", "PAD630", "PAQ650", "PAQ655", "PAD660", "PAQ665", "PAQ670", "PAD675", "PAD680"]),
+    get_xpt("DIQ", ["DIQ010"]),
+    get_xpt("PAQ", ["PAQ605", "PAQ610", "PAQ620", "PAQ625", "PAQ650", "PAQ655", "PAQ665", "PAQ670", "PAD680"]),
     get_xpt("SLQ", ["SLD012", "SLD013"]),
     get_xpt("SMQ", ["SMQ040"]),
-    get_xpt("BPQ", ["BPQ020"]),
-    get_xpt("CDQ", ["CDQ001"]),
-    get_xpt("DIQ", ["DIQ010"]),
-    get_xpt("MCQ", ["MCQ160C", "MCQ160E", "MCQ160F", "MCQ160M", "MCQ160G", "MCQ160O", "MCQ160L"]),
+    get_xpt("MCQ", ["MCQ160M"]),
+    get_xpt("BPX", ["BPXPLS"]),
     get_xpt("BMX", ["BMXBMI"]),
     get_xpt("TCHOL", ["LBXTC"]),
     get_xpt("FERTIN", ["LBXFER"]),
@@ -28,10 +27,6 @@ data.index = pd.Index(data.index.values.astype(int), name="SEQN")
 # save raw data
 data.to_csv("NHANES_2017_data.txt", sep="\t", na_rep="nan")
 print(data)
-
-# blood pressure
-data["BPXSY"] = data[["BPXSY1", "BPXSY2", "BPXSY3", "BPXSY4"]].median(axis=1, skipna=True)
-data["BPXDI"] = data[["BPXDI1", "BPXDI2", "BPXDI3", "BPXDI4"]].median(axis=1, skipna=True)
 
 # remove subjects < 24 years old
 data = data[data["RIDAGEYR"] >= 24]
@@ -100,8 +95,6 @@ numerical = {
     "SLD012" : "sleepWeekdays",
     "SLD013" : "sleepWeekends",
     "BPXPLS" : "pulse",
-    "BPXSY" : "systolicBP",
-    "BPXDI" : "diastolicBP",
     "BMXBMI" : "bmi",
     "LBXTC" : "cholesterol",
     "LBXFER" : "ferritin",
@@ -111,15 +104,8 @@ variables.update({v : data[k] for k,v in numerical.items()})
 # binary indicators
 binary = {
     "BPQ020" : "highBP", 
-    "CDQ001" : "chestPain", 
     "DIQ010" : "diabetes", 
-    "MCQ160C" : "coronaryHD", 
-    "MCQ160E" : "heartAttack", 
-    "MCQ160F" : "stroke", 
     "MCQ160M" : "thyroidProblem", 
-    "MCQ160G" : "emphysema", 
-    "MCQ160O" : "COPD", 
-    "MCQ160L" : "liverCondition"
 }
 variables.update({v : (data[k] == 1).astype(int) for k,v in binary.items()})
 
