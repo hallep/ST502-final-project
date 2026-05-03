@@ -2,6 +2,7 @@ library(tidyverse)
 library(corrplot)
 library(dplyr)
 library(tidyr)
+library(ggplot2)
 
 df <- read_tsv("regression_variables.txt")   
 
@@ -134,7 +135,21 @@ subset(chi_pvalues,
        p_value < 0.05 &
          grepl("highBP", pair))
 
+chi_top <- chi_pvalues %>%
+  filter(p_value < 0.05) %>%
+  mutate(log_p = -log10(p_value)) %>%
+  arrange(desc(log_p)) %>%
+  slice_head(n = 20)
 
+ggplot(chi_top, aes(x = reorder(pair, log_p), y = log_p)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Top Categorical-Categorical Associations",
+    x = "Variable Pair",
+    y = "-log10(p-value)"
+  ) +
+  theme_minimal()
 
 # ==== numeric vs categorical t-test ==== 
 num_names <- names(num_vars)
@@ -167,3 +182,19 @@ highBP_num_results <- subset(results, categorical == "highBP")
 # including p_value > 0.05
 highBP_num_results[order(highBP_num_results$p_value), ]
 
+t_top <- results %>%
+  filter(p_value < 0.05) %>%
+  mutate(log_p = -log10(p_value)) %>%
+  arrange(desc(log_p)) %>%
+  slice_head(n = 20)
+
+ggplot(t_top, aes(x = reorder(paste(numeric, categorical, sep = " vs "), log_p),
+                  y = log_p)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Top Numeric-Categorical Associations",
+    x = "Variable Pair",
+    y = "-log10(p-value)"
+  ) +
+  theme_minimal()
