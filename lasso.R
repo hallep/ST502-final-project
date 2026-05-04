@@ -59,7 +59,7 @@ auc_val <- auc(roc_obj)
 
 cat("Final Test AUC:", auc_val, "\n")
 
-plot(roc_obj, main = "LASSO ROC Curve (Test Set)", col = "blue", lwd = 2)
+plot(roc_obj, main = "LASSO ROC Curve (Test Set)", col = "pink", lwd = 2)
 
 train_pred <- predict(lasso_model,
                       newx = X_train,
@@ -168,3 +168,21 @@ cat("Sparsity (% zero):",
 # lambda values
 cat("\nLambda Min:", group_lasso_model$lambda.min, "\n")
 
+# full coefficient matrix
+coefs_grp <- as.matrix(coef(
+  group_lasso_model,
+  lambda = group_lasso_model$lambda.min
+))
+
+# remove intercept
+coefs_no_intercept <- coefs_grp[-1, , drop = FALSE]
+
+# -------------------------------
+# DELETED VARIABLES (ZERO COEFS)
+# -------------------------------
+zero_idx <- which(coefs_no_intercept == 0)
+
+deleted_vars <- rownames(coefs_no_intercept)[zero_idx]
+
+cat("\nGroup LASSO Deleted Variables (Coefficient = 0):\n")
+print(deleted_vars)
