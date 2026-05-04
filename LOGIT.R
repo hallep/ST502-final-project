@@ -2,6 +2,23 @@ library(pROC)
 
 vars <- read.table("regression_variables.txt", header = TRUE, sep = "\t", na.strings = "nan")
 
+# delete specified variables
+vars <- vars[, !(names(vars) %in% c(
+  "stroke",
+  "heartAttack",
+  "coronaryHD",
+  "chestPain",
+  "emphysema",
+  "COPD",
+  "liverCondition",
+  "systolicBP",
+  "diastolicBP"
+))]
+
+# check remaining variables
+names(vars)
+dim(vars)
+
 # response variable
 y <- as.numeric(vars$highBP)
 
@@ -75,3 +92,4 @@ print(coef(logit_model))
 cat("\nModel Summary:\n")
 summary(logit_model)
 
+ncol(X)

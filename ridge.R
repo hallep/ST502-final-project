@@ -3,6 +3,23 @@ library(pROC)
 
 vars <- read.table("regression_variables.txt", header = TRUE, sep = "\t", na.strings = "nan")
 
+# delete specified variables
+vars <- vars[, !(names(vars) %in% c(
+  "stroke",
+  "heartAttack",
+  "coronaryHD",
+  "chestPain",
+  "emphysema",
+  "COPD",
+  "liverCondition",
+  "systolicBP",
+  "diastolicBP"
+))]
+
+# check remaining variables
+names(vars)
+dim(vars)
+
 y <- as.numeric(vars$highBP)
 
 X <- vars[, !(names(vars) %in% c("id", "highBP"))]
@@ -62,3 +79,4 @@ print(coefs)
 
 cat("Lambda (min):", ridge_model$lambda.min, "\n")
 cat("Lambda (1se):", ridge_model$lambda.1se, "\n")
+#ncol(X)
