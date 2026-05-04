@@ -1,0 +1,24 @@
+lambda.min
+Intercept	-4.926
+Age	0.054
+Black	0.423
+Mexican American	-0.354
+Hispanic	-0.014
+Asian	0.039
+Other/mixed race	0.066
+Some high school	-0.002
+High school graduate	0.113
+Some college	0.156
+College graduate	-0.008
+Married	-0.029
+Fair diet	0.105
+Very good diet	-0.081
+Excellent diet	-0.275
+Sleep on weekends	-0.009
+Vigorous recreational activity	-0.041
+Moderate recreational activity	-0.005
+Sedentary activity	0.002
+BMI	0.055
+Cholesterol	-0.002
+Ferritin	0.001
+Diabetes	0.647

@@ -1,0 +1,42 @@
+lambda.min
+Intercept	-4.215
+Age	-0.022
+Gender	0.048
+Black	-0.469
+Mexican American	-0.006
+Hispanic	0.526
+Asian	0.058
+Other/mixed race	0.062
+Some high school	-0.124
+High school graduate	0.125
+Some college	0.141
+College graduate	-0.132
+Married	-0.053
+Widowed	0.151
+Divorced	0.063
+Separated	-0.061
+Living with partner	-0.059
+Income-poverty ratio	0.035
+Drink daily	0.054
+Drink weekly	0.043
+Drink monthly	-0.043
+Drink yearly	0.031
+Smoke every day	-0.362
+Smoke some days	-0.142
+Fair diet	-0.002
+Good diet	0.143
+Very good diet	0.003
+Excellent diet	0.002
+Sleep on weekdays	-0.069
+Sleep on weekends	-0.016
+Vigorous work activity	0.004
+Moderate work activity	-0.06
+Vigorous recreational activity	0.051
+Moderate recreational activity	0.017
+Sedentary activity	-0.036
+BMI	-0.001
+Pulse	0.051
+Cholesterol	-0.003
+Ferritin	0.001
+Diabetes	0.69
+Thyroid problems	0.127

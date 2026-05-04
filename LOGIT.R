@@ -52,6 +52,13 @@ test_df <- as.data.frame(X_test)
 logit_model <- glm(highBP ~ .,
                    data = train_df,
                    family = binomial)
+dim(train_df)
+dim(test_df)
+length(y_test)
+
+class(train_df)
+class(test_df)
+class(y_test)
 
 # test predictions
 test_pred <- predict(logit_model,
