@@ -80,3 +80,4 @@ print(coefs)
 cat("Lambda (min):", ridge_model$lambda.min, "\n")
 cat("Lambda (1se):", ridge_model$lambda.1se, "\n")
 #ncol(X)
+

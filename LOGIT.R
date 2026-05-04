@@ -99,4 +99,23 @@ print(coef(logit_model))
 cat("\nModel Summary:\n")
 summary(logit_model)
 
-ncol(X)
+# coefficients
+cat("\nModel Coefficients:\n")
+coefs <- coef(logit_model)
+print(coefs)
+
+# odds ratios
+odds_ratios <- exp(coefs)
+
+cat("\nOdds Ratios:\n")
+print(odds_ratios)
+
+# combine into a clean table
+results_table <- data.frame(
+  Coefficient = coefs,
+  Odds_Ratio = odds_ratios
+)
+
+cat("\nCoefficients + Odds Ratios:\n")
+print(results_table)
+
