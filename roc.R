@@ -8,7 +8,7 @@ data = read.table("regression_variables.txt", sep="\t", header = TRUE, row.names
 
 vars = data[, !(names(data) %in% "id")]
 y = as.numeric(vars$highBP)
-X = vars[, !(names(data) %in% "highBP")]
+X = vars[, !(names(vars) %in% "highBP")]
 
 # split into train vs. test
 set.seed(777)
@@ -80,12 +80,62 @@ dev.off()
 
 # ===== PCR Model ===== #
 n = ncol(vars) - 1
-pcr_model = pcr(highBP ~ ., data = trainData, ncomp = n, scale = TRUE, validation = "CV")
-pcr_pred = predict(pcr_model, testData, ncomp=n)
-roc_pcr = roc(testData$highBP, pcr_pred)
+pca_res = prcomp(X_train, scale. = TRUE)
+
+ncomp = c()
+y_rmse = c()
+y_auc = c()
+for (m in 0:n) {
+  ncomp = c(ncomp, m)
+  
+
+  pca_train = data.frame(pca_res$x[, 1:5], highBP = y_train)
+  pcr_model = glm(highBP ~ ., data = pca_train, family = binomial)
+  pcr_pred = predict(pcr_model, newData = X_test, type = "response")
+  pcr_roc = roc(y_train, pcr_pred)
+  
+  y_rmse = c(y_rmse, sqrt(mean(pcr_model$residuals ^ 2)))
+  y_auc = c(y_auc, auc(pcr_roc))
+}
+
+pca_train_all = data.frame(pca_res$x[, 1:5], highBP = y_train)
+pcr_model_all = glm(highBP ~ ., data = pca_train, family = binomial)
+pcr_pred_all = predict(pcr_model, newData = X_test, type = "response")
+pcr_roc_all = roc(y_train, pcr_pred)
+
+summary(pcr_model_all)
+
+pca_train_9 = data.frame(pca_res$x[, 1:5], highBP = y_train)
+pcr_model_9 = glm(highBP ~ ., data = pca_train, family = binomial)
+pcr_pred_9 = predict(pcr_model, newData = X_test, type = "response")
+pcr_roc_9 = roc(y_train, pcr_pred)
+
+
+pcr_model_all$effects
+
+
+pcr_model_all$
+model = glm.pcr(y = y_train, x = as.matrix(X_train), k = n, xnew = as.matrix(X_test))
+model$
+
+  
+  
+  
+  pcr_model = pcr(highBP ~ ., data = pca_train, ncomp = , scale = TRUE, validation = "CV")
+predict(model$model, testData)
+prcomp
+
+pcr_pred_all = predict(pcr_model, testData, ncomp = 9)
+roc_pcr_all = roc(testData$highBP, pcr_pred_all)
+
+pcr_pred_9 = predict(pcr_model, testData, ncomp = n)
+roc_pcr_9 = roc(testData$highBP, pcr_pred_9)
 
 png("roc_curves/pcr_roc_test.png", width = W, height = H)
-plot(roc_pcr, col = "darkorange", lwd = 2)
+plot(roc_pcr_all, col = "brown", lwd = 2)
+plot(roc_pcr_9, col = "darkorange", lwd = 2, add = TRUE)
+legend("bottomright", legend = c("All Components","9 Components"),
+       col = c("brown","darkorange"), lwd = 2)
 dev.off()
 
 # ===== All ===== #
@@ -95,7 +145,7 @@ plot(logit_roc, col = "blue", lwd = 2)
 plot(lasso_roc, col = "hotpink", lwd = 2, add = TRUE)
 plot(group_lasso_roc, col = "darkgreen", lwd = 2, add = TRUE)
 plot(ridge_roc, col = "red", lwd = 2, add = TRUE)
-plot(roc_pcr, col = "darkorange", lwd = 2, add = TRUE)
+plot(roc_pcr_9, col = "darkorange", lwd = 2, add = TRUE)
 
 legend("bottomright",
        legend = c("Standard","LASSO","Group LASSO", "Ridge", "PCR"),

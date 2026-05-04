@@ -26,7 +26,7 @@ testData = vars[-trainIdx, ]
 # ===== PCR model ===== #
 model = pcr(highBP ~ ., data = trainData, ncomp = n, scale = TRUE, validation = "CV")
 
-m = 4
+m = 9
 
 # Regression Explanatory Power
 rmse = RMSEP(model)$val
@@ -58,11 +58,11 @@ pR2 = ggplot(varY, aes(x = ncomps, y = R2)) +
 
 # Components
 varX = data.frame(
-  "ncomps" = rep(1:n, 2),
+  "ncomps" = 1:n,
   "exp" = explvar(model),
   "cum" = cumsum(explvar(model))/16
 )
-
+explvar(model)
 pX = ggplot(varX, aes(x = ncomps)) + 
   geom_vline(xintercept = m, color="dimgrey", linewidth = 0.5, linetype = "dashed") + 
   geom_line(aes(y = exp, color = "Explained Variance", linetype = "Explained Variance"), linewidth = 0.6) +
@@ -79,7 +79,10 @@ pX = ggplot(varX, aes(x = ncomps)) +
   theme_classic() + theme(legend.title = element_blank(), legend.justification = c(0, 1), legend.position = c(0.1, 1),
                           legend.background = element_rect(fill = "transparent", color = NA))
 
-l = model$loadings[, 1:n]
+var_names = c("age", "gender", "black", "mexAmer", "hispanic", "asian", "otherRace", "someHS", "HSGrad", "someCollege", "collegeGrad", "married", "widowed", "divorced", "separated", "livingWithPartner", "incomePoverty", "dailyAlc", "weeklyAlc", "monthlyAlc", "yearlyAlc", "smokeEveryDay", "smokeSomeDays", "fairDiet", "goodDiet", "veryGoodDiet", "excellentDiet", "sleepWeekdays", "sleepWeekends", "vigWork", "modWork", "vigRec", "modRec", "sedentary", "bmi", "pulse", "cholesterol", "ferritin", "diabetes", "thyroidProblem")
+var_labels = c("Age", "Gender", "Black", "Mexican American", "Hispanic", "Asian", "Other/mixed race", "Some high school", "High school graduate", "Some college", "College graduate", "Married", "Widowed", "Divorced", "Separated", "Living with partner", "Income-poverty ratio", "Drink daily", "Drink weekly", "Drink monthly", "Drink yearly", "Smoke every day", "Smoke some days", "Fair diet", "Good diet", "Very good diet", "Excellent diet", "Sleep on weekdays", "Sleep on weekends", "Vigorous work activity", "Moderate work activity", "Vigorous recreational activity", "Moderate recreational activity", "Sedentary activity", "BMI", "Pulse", "Cholesterol", "Ferritin", "Diabetes", "Thyroid problems")
+
+l = model$loadings[rev(var_names), 1:n]
 load = data.frame(
   "variable" = factor(rep(rownames(l), ncol(l)), levels = as.vector(rownames(l))),
   "component" = rep(1:n, each = nrow(l)),
@@ -90,14 +93,14 @@ pLoad = ggplot(load, aes(x = component, y = variable, fill = load)) +
   geom_tile() + 
   scale_fill_gradient2(name = "Load", low = "steelblue3", mid = "white", high = "brown3", midpoint = 0,
                        na.value = "grey85", guide = "colourbar", aesthetics = "fill") + 
-  labs(title = "Component Composition", x = "Component", y = "Variable") +
-  scale_x_continuous(expand = c(0, 0)) + scale_y_discrete(limits = rev) +
-  coord_fixed() +
-  theme_classic() + theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 0))
+  labs(x = "Component", y = "Variable") +
+  scale_x_continuous(expand = c(0, 0)) + scale_y_discrete(labels = rev(var_labels)) + coord_fixed() +
+  theme_classic()
+pLoad
 
 # ===== Predict ===== #
 
-pred_pcr = predict(model, testData, ncomp=n)
+pred_pcr = predict(model, testData, ncomp=m)
 
 # ROC
 roc_pcr = roc(testData$highBP, pred_pcr)
@@ -133,11 +136,14 @@ area = data.frame("ncomps" = x, "auc" = y)
 pAUC = ggplot(area, aes(x = ncomps, y = auc)) + 
   geom_vline(xintercept = m, color = "dimgray", linewidth = 0.5, linetype = "dashed") +
   geom_line(color = "hotpink", linewidth = 0.8) + 
-  labs(title = "Area Under Curve", x = "Number of Components", y = "Area Under Curve") +
+  labs(title = "Area Under Curve", x = "Number of Components", y = "AOC") +
   theme_classic()
 
 # ===== Plots ===== #
 
-(pErr + pR2) / (pROC + pAUC)
-pX
-pLoad
+png("plots/group_lasso_roc_test.png", width = 1500, height = 750)
+design = c(
+  area(1, 1, 2, 2), area(3, 2), 
+  area(1, 3), area(2, 3), area(3, 3))
+free(pLoad) + pX + pErr + pR2 + pAUC + plot_layout(design = design, widths = c(1, 3, 3))
+dev.off()
