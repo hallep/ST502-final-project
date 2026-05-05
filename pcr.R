@@ -93,7 +93,7 @@ pLoad = ggplot(load, aes(x = component, y = variable, fill = load)) +
   geom_tile() + 
   scale_fill_gradient2(name = "Load", low = "steelblue3", mid = "white", high = "brown3", midpoint = 0,
                        na.value = "grey85", guide = "colourbar", aesthetics = "fill") + 
-  labs(x = "Component", y = "") +
+  labs(title = "Component Composition", x = "Component", y = "") +
   scale_x_continuous(expand = c(0, 0)) + scale_y_discrete(labels = rev(var_labels)) + coord_fixed() +
   theme_classic()
 pLoad
