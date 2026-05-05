@@ -93,7 +93,7 @@ pLoad = ggplot(load, aes(x = component, y = variable, fill = load)) +
   geom_tile() + 
   scale_fill_gradient2(name = "Load", low = "steelblue3", mid = "white", high = "brown3", midpoint = 0,
                        na.value = "grey85", guide = "colourbar", aesthetics = "fill") + 
-  labs(x = "Component", y = "Variable") +
+  labs(x = "Component", y = "") +
   scale_x_continuous(expand = c(0, 0)) + scale_y_discrete(labels = rev(var_labels)) + coord_fixed() +
   theme_classic()
 pLoad
@@ -141,9 +141,24 @@ pAUC = ggplot(area, aes(x = ncomps, y = auc)) +
 
 # ===== Plots ===== #
 
-png("plots/group_lasso_roc_test.png", width = 1500, height = 750)
+png("plots/pcr_components.png", width = 1500, height = 750)
 design = c(
   area(1, 1, 2, 2), area(3, 2), 
   area(1, 3), area(2, 3), area(3, 3))
 free(pLoad) + pX + pErr + pR2 + pAUC + plot_layout(design = design, widths = c(1, 3, 3))
+
+png("plots/pcr_component_heatmap.png", width = 850, height = 500)
+pLoad
+dev.off()
+
+png("plots/pcr_xvariance.png", width = 650, height = 250)
+pX
+dev.off()
+
+png("plots/pcr_pred_pwr.png", width = 650, height = 750)
+pErr / pR2 / pAUC
+dev.off()
+
+png("plots/pcr_summary.png", width = 1100, height = 550)
+pLoad + (pX / pErr / pAUC) + plot_layout(widths = c(3, 2))
 dev.off()

@@ -81,10 +81,10 @@ chi_sig = chi_pvalues %>%
   arrange(desc(log_p)) %>%
   slice_head(n = 20)
 
-png("plots/cat_cat_chi_squared.png", width = 750, height = 450)
+png("plots/cat_cat_chi_squared.png", width = 750, height = 600)
 ggplot(chi_sig, aes(x = reorder(pair, log_p), y = log_p)) +
   geom_col() + coord_flip() +
-  labs(title = "", x = "", y = "-log10(p-value)") +
+  labs(title = "Categorical-Categorical Associations", x = "", y = "-log10(p-value)") +
   theme_classic()
 dev.off()
 
@@ -113,10 +113,10 @@ t_sig = results %>%
   arrange(desc(log_p)) %>%
   slice_head(n = 20)
 
-png("plots/num_cat_ttest.png", width = 750, height = 450)
+png("plots/num_cat_ttest.png", width = 750, height = 600)
 ggplot(t_sig, aes(x = reorder(paste(numeric, categorical, sep = " v. "), log_p), y = log_p)) +
   geom_col() + coord_flip() +
-  labs(title = "", x = "", y = "-log10(p-value)") +
+  labs(title = "Quantitative-Categorical Associations", x = "", y = "-log10(p-value)") +
   theme_classic()
 dev.off()
 

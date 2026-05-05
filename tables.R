@@ -1,9 +1,12 @@
 library(glmnet)
 library(pROC)
 library(grpreg)
+library(ggplot2)
+library(patchwork)
 
 # Regression Data
 data = read.table("regression_variables.txt", sep="\t", header = TRUE, row.names = "id", na.strings = "nan")
+n = ncol(data)
 
 vars = data[, !(names(data) %in% "id")]
 y = as.numeric(vars$highBP)
@@ -24,7 +27,8 @@ train_idx <- c(train_0, train_1)
 X_train = X[train_idx, ]
 y_train = y[train_idx]
 train_df = vars[train_idx, ]
-
+nrow(train_df)
+nrow(test_df)
 # Testing Data
 X_test = as.data.frame(X[-train_idx, ])
 y_test = y[-train_idx]
@@ -63,7 +67,7 @@ no_intercept = lasso_coefs[-1, , drop = FALSE]
 num_zero = sum(no_intercept == 0)
 total = nrow(no_intercept)
 
-cat("Non-zero:", sum(coef_no_intercept != 0), "\n")
+cat("Non-zero:", sum(no_intercept != 0), "\n")
 cat("Zero:", num_zero, "\n")
 cat("Sparsity (% zero):", round(100 * num_zero / total, 2), "%\n")
 
@@ -83,7 +87,7 @@ no_intercept = group_lasso_coefs[-1, , drop = FALSE]
 num_zero = sum(no_intercept == 0)
 total = nrow(no_intercept)
 
-cat("Non-zero:", sum(coef_no_intercept != 0), "\n")
+cat("Non-zero:", sum(no_intercept != 0), "\n")
 cat("Zero:", num_zero, "\n")
 cat("Sparsity (% zero):", round(100 * num_zero / total, 2), "%\n")
 
@@ -95,3 +99,30 @@ write.table(ridge_lambda_min, "tables/ridge_lambda_min.txt", sep = "\t", quote =
 
 cat("Lambda (min):", round(ridge_model$lambda.min,4), "\n")
 cat("Lambda (1se):", round(ridge_model$lambda.1se, 3), "\n")
+
+# ===== Heat Map ===== #
+coef_data = data.frame(
+  model = rep(c("Standard Logistic", "LASSO", "Group LASSO", "Ridge"), each = n),
+  coef = rep(row_labels, 4),
+  value = c(logit_coefs$Est, lasso_coefs$lambda.min, group_lasso_coefs$lambda.min, ridge_coefs$lambda.min)
+)
+lmin = c(lasso_coefs$lambda.min, group_lasso_coefs$lambda.min, ridge_coefs$lambda.min)
+lmin_labels = ifelse(lmin != 0, signif(lmin, 2), NA)
+coef_labels = paste(logit_coefs$Est, ifelse(logit_coefs$Pr < 0.05, "*", ""))
+coef_data$label = c(coef_labels, lmin_labels)
+
+coef_data = coef_data[coef_data$coef != "Intercept", ]
+
+png("plots/coefficient_heatmap.png", width = 850, height = 600)
+ggplot(coef_data, aes(x = factor(model, levels = c("Standard Logistic", "LASSO", "Group LASSO", "Ridge")), 
+                      y = factor(coef, levels = row_labels), fill = value)) + 
+  geom_tile() + 
+  scale_fill_gradient2(name = "", low = "steelblue3", mid = "white", high = "brown3", midpoint = 0,
+                       na.value = "grey85", guide = "colourbar", aesthetics = "fill") + 
+  labs(x = "", y = "") +
+  scale_y_discrete(limits = rev) +
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 0.2) + 
+  geom_vline(xintercept = c(2.5, 3.5), color = "black", linewidth = 0.25) + 
+  geom_text(aes(label = label)) +
+  theme_classic()
+dev.off()

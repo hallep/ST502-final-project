@@ -33,6 +33,9 @@ train_df$highBP <- y_train
 
 test_df <- as.data.frame(X_test)
 
+# Figure Sizes
+W = H = 500
+
 # ===== Standard Logistic Model ===== #
 logit_model = glm(highBP ~ ., data = train_df, family = binomial)
 test_pred = predict(logit_model, newdata = X_test, type = "response")
