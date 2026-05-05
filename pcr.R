@@ -1,13 +1,15 @@
-library(pls)
 library(glmnet)
 library(pROC)
 library(ggplot2)
 library(patchwork)
+library(performance)
 
 # Regression Data
-data = read.table("regression_variables.txt", sep="\t", header = TRUE, row.names = "id", na.strings = "nan")
-vars = data[, !(names(data) %in% "id")]
+vars = read.table("regression_variables.txt", sep="\t", header = TRUE, row.names = "id", na.strings = "nan")
 n = ncol(vars) - 1
+
+X = vars[, !(names(vars) %in% "highBP")]
+y = factor(as.numeric(vars$highBP))
 
 # split into train vs. test
 set.seed(777)
@@ -20,69 +22,31 @@ train_1 = sample(idx_1, size = 0.7 * length(idx_1))
 
 trainIdx <- c(train_0, train_1)
 
-trainData = vars[trainIdx, ]
-testData = vars[-trainIdx, ]
+# Training Data
+X_train = X[train_idx, ]
+y_train = y[train_idx]
 
-# ===== PCR model ===== #
-model = pcr(highBP ~ ., data = trainData, ncomp = n, scale = TRUE, validation = "CV")
+# Test Data
+X_test = X[-train_idx, ]
+y_test = y[-train_idx]
+
+# ===== Principal Component Regression ===== #
 
 m = 9
 
-# Regression Explanatory Power
-rmse = RMSEP(model)$val
-varY = data.frame(
-  "ncomps" = 0:n,
-  "RMSE.CV" = rmse["CV", , ],
-  "RMSE.adjCV" = rmse["adjCV", , ],
-  "R2" = R2(model)$val["CV", , ]
-)
+# ===== Principal Component Analysis ===== #
+pca = prcomp(X_train, center = TRUE, scale = TRUE)
+comps = pca$x
 
-pErr = ggplot(varY, aes(x = ncomps)) + 
-  geom_vline(xintercept = m, color="dimgrey", linewidth = 0.5, linetype = "dashed") + 
-  geom_line(aes(y = RMSE.CV, color = "RMSE", linetype = "RMSE"), linewidth = 0.65) +
-  geom_line(aes(y = RMSE.adjCV, color = "Adjusted RMSE", linetype = "Adjusted RMSE"), linewidth = 0.65) +
-  labs(title = "Root Mean Square Error of Prediction", x = "Number of Components", y = "RMSE") +
-  scale_color_manual(name = "", breaks = c("RMSE", "Adjusted RMSE"), 
-                     values = c("RMSE" = "black", "Adjusted RMSE" = "red")) + 
-  scale_linetype_manual(name = "", breaks = c("RMSE", "Adjusted RMSE"), 
-                        values = c("RMSE" = "solid", "Adjusted RMSE" = "dashed")) +
-  theme_classic() + theme(legend.title = element_blank(), legend.justification = c(1, 1), legend.position = c(1, 1),
-                          legend.background = element_rect(fill = "transparent", color = NA))
+eigen = pca$rotation
+X_test_pca = as.data.frame(predict(pca, newdata = X_test))
+import = summary(pca)$importance
 
-pR2 = ggplot(varY, aes(x = ncomps, y = R2)) + 
-  geom_vline(xintercept = m, color="dimgrey", linewidth = 0.5, linetype = "dashed") + 
-  geom_line(color = "mediumorchid", linewidth = 0.8) +
-  labs(title = bquote("Coefficient of Determination" ~ (R^2)), 
-       x = "Number of Components", y = expression(R^2)) +
-  theme_classic()
-
-# Components
-varX = data.frame(
-  "ncomps" = 1:n,
-  "exp" = explvar(model),
-  "cum" = cumsum(explvar(model))/16
-)
-explvar(model)
-pX = ggplot(varX, aes(x = ncomps)) + 
-  geom_vline(xintercept = m, color="dimgrey", linewidth = 0.5, linetype = "dashed") + 
-  geom_line(aes(y = exp, color = "Explained Variance", linetype = "Explained Variance"), linewidth = 0.6) +
-  geom_line(aes(y = cum, color = "Cumulative Variance", linetype = "Cumulative Variance"), linewidth = 0.8) +
-  scale_y_continuous(
-    name = "Variance (%)",
-    sec.axis = sec_axis(~.*16, name = "Cumulative Variance (%)")
-  ) +
-  scale_color_manual(name = "", breaks = c("Explained Variance", "Cumulative Variance"),
-                     values = c("Explained Variance" = "black", "Cumulative Variance" = "dodgerblue")) + 
-  scale_linetype_manual(name = "", breaks = c("Explained Variance", "Cumulative Variance"),
-                        values = c("Explained Variance" = "dashed", "Cumulative Variance" = "solid")) + 
-  labs(title = "Variance Explained by Components", x = "Component") +
-  theme_classic() + theme(legend.title = element_blank(), legend.justification = c(0, 1), legend.position = c(0.1, 1),
-                          legend.background = element_rect(fill = "transparent", color = NA))
-
+# ----- Component Composition ----- #
 var_names = c("age", "gender", "black", "mexAmer", "hispanic", "asian", "otherRace", "someHS", "HSGrad", "someCollege", "collegeGrad", "married", "widowed", "divorced", "separated", "livingWithPartner", "incomePoverty", "dailyAlc", "weeklyAlc", "monthlyAlc", "yearlyAlc", "smokeEveryDay", "smokeSomeDays", "fairDiet", "goodDiet", "veryGoodDiet", "excellentDiet", "sleepWeekdays", "sleepWeekends", "vigWork", "modWork", "vigRec", "modRec", "sedentary", "bmi", "pulse", "cholesterol", "ferritin", "diabetes", "thyroidProblem")
 var_labels = c("Age", "Gender", "Black", "Mexican American", "Hispanic", "Asian", "Other/mixed race", "Some high school", "High school graduate", "Some college", "College graduate", "Married", "Widowed", "Divorced", "Separated", "Living with partner", "Income-poverty ratio", "Drink daily", "Drink weekly", "Drink monthly", "Drink yearly", "Smoke every day", "Smoke some days", "Fair diet", "Good diet", "Very good diet", "Excellent diet", "Sleep on weekdays", "Sleep on weekends", "Vigorous work activity", "Moderate work activity", "Vigorous recreational activity", "Moderate recreational activity", "Sedentary activity", "BMI", "Pulse", "Cholesterol", "Ferritin", "Diabetes", "Thyroid problems")
 
-l = model$loadings[rev(var_names), 1:n]
+l = eigen[rev(var_names), 1:n]
 load = data.frame(
   "variable" = factor(rep(rownames(l), ncol(l)), levels = as.vector(rownames(l))),
   "component" = rep(1:n, each = nrow(l)),
@@ -98,67 +62,99 @@ pLoad = ggplot(load, aes(x = component, y = variable, fill = load)) +
   theme_classic()
 pLoad
 
-# ===== Predict ===== #
-
-pred_pcr = predict(model, testData, ncomp=m)
-
-# ROC
-roc_pcr = roc(testData$highBP, pred_pcr)
-auc_pcr = auc(roc_pcr)
-
-curve = data.frame(
-  "Specificity" = roc_pcr$specificities,
-  "Sensitivity" = roc_pcr$sensitivities
+# ----- Variance in X ----- #
+varX = data.frame(
+  ncomps = 1:n,
+  variance = import["Proportion of Variance", ],
+  cumvar = import["Cumulative Proportion", ] / 16
 )
 
-pROC = ggplot(curve, aes(x = Specificity, y = Sensitivity)) + 
-  geom_abline(intercept = 1, slope = 1, color = "dimgray", linewidth = 0.5) +
-  geom_line(color = "darkorange", linewidth = 0.8) + 
-  labs(title = "ROC Curve (Test Set)", x = "Specificity", y = "Sensitivity") +
-  scale_x_reverse() + theme_classic()
+pX = ggplot(varX, aes(x = ncomps)) + 
+  geom_vline(xintercept = m, color="dimgrey", linewidth = 0.5, linetype = "dashed") + 
+  geom_line(aes(y = variance, color = "Explained Variance", linetype = "Explained Variance"), linewidth = 0.6) +
+  geom_line(aes(y = cumvar, color = "Cumulative Variance", linetype = "Cumulative Variance"), linewidth = 0.8) +
+  scale_y_continuous(
+    name = "Variance (%)",
+    sec.axis = sec_axis(~.*16, name = "Cumulative Variance (%)")
+  ) +
+  scale_color_manual(name = "", breaks = c("Explained Variance", "Cumulative Variance"),
+                     values = c("Explained Variance" = "black", "Cumulative Variance" = "dodgerblue")) + 
+  scale_linetype_manual(name = "", breaks = c("Explained Variance", "Cumulative Variance"),
+                        values = c("Explained Variance" = "dashed", "Cumulative Variance" = "solid")) + 
+  labs(title = "Variance Explained by Components", x = "Component") +
+  theme_classic() + theme(legend.title = element_blank(), legend.justification = c(0, 1), legend.position = c(0.25, 1),
+                          legend.background = element_rect(fill = "transparent", color = NA))
+pX
 
-# AUC
-model_full = pcr(highBP ~ ., data = trainData, ncomp = n, scale = TRUE, validation = "CV")
+# ===== Logistic Regression ===== #
 
 x = c()
-y = c()
+y_rmse = c()
+y_auc = c()
+
+roc_n = NULL
+roc_m = NULL
 
 for (i in n:1) {
-  pred = predict(model_full, testData, ncomp=i)
-  roc_obj = roc(testData$highBP, pred)
-  
   x = c(x, i)
-  y = c(y, auc(roc_obj))
+  
+  if (i == 1) {
+    train_data = data.frame(y = y_train, PC1 = comps[, 1])
+    test_data = data.frame(PC1 = X_test_pca[, 1])
+  } else {
+    train_data = data.frame(y = y_train, comps[, 1:i])
+    test_data = X_test_pca[, 1:i]
+  }
+  
+  # train model
+  model = glm(y ~ ., data = train_data, family = binomial)
+  y_rmse = c(y_rmse, rmse(model))
+  
+  # predict
+  pred = predict(model, newdata = test_data, type = "response")
+  roc_obj = roc(y_test, pred)
+  y_auc = c(y_auc, auc(roc_obj))
+  
+  if (i == n) {
+    roc_n = roc_obj
+  } else if (i == m) {
+    roc_m = roc_obj
+  }
+  
 }
 
-area = data.frame("ncomps" = x, "auc" = y)
+varY = data.frame(
+  ncomps = x,
+  rmse = y_rmse,
+  auc = y_auc
+)
 
-pAUC = ggplot(area, aes(x = ncomps, y = auc)) + 
+# ----- Variance in Y ----- #
+pRMSE = ggplot(varY, aes(x = ncomps, y = rmse)) + 
+  geom_vline(xintercept = m, color="dimgrey", linewidth = 0.5, linetype = "dashed") + 
+  geom_line(color = "darkorchid", linewidth = 0.65) +
+  labs(title = "Root Mean Square Error of Prediction", y = "RMSE", x = "Number of Components") +
+  theme_classic()
+pRMSE
+
+# ----- Prediction ----- #
+png("roc_curves/pcr_roc_test.png", width = 500, height = 500)
+plot(roc_n, col = "brown", lwd = 2)
+plot(roc_m, col = "darkorange", lwd = 2, add = TRUE)
+
+legend("bottomright", legend = c("All Components", paste(m, "Components")),
+       col = c("brown", "darkorange"), lwd = 2)
+dev.off()
+
+pAUC = ggplot(varY, aes(x = ncomps, y = auc)) + 
   geom_vline(xintercept = m, color = "dimgray", linewidth = 0.5, linetype = "dashed") +
   geom_line(color = "hotpink", linewidth = 0.8) + 
   labs(title = "Area Under Curve", x = "Number of Components", y = "AUC") +
   theme_classic()
+pAUC
 
 # ===== Plots ===== #
 
-png("plots/pcr_components.png", width = 1500, height = 750)
-design = c(
-  area(1, 1, 2, 2), area(3, 2), 
-  area(1, 3), area(2, 3), area(3, 3))
-free(pLoad) + pX + pErr + pR2 + pAUC + plot_layout(design = design, widths = c(1, 3, 3))
-
-png("plots/pcr_component_heatmap.png", width = 850, height = 500)
-pLoad
-dev.off()
-
-png("plots/pcr_xvariance.png", width = 650, height = 250)
-pX
-dev.off()
-
-png("plots/pcr_pred_pwr.png", width = 650, height = 750)
-pErr / pR2 / pAUC
-dev.off()
-
 png("plots/pcr_summary.png", width = 1100, height = 550)
-pLoad + (pX / pErr / pAUC) + plot_layout(widths = c(3, 2))
+pLoad + (pX / pRMSE / pAUC) + plot_layout(widths = c(3, 2))
 dev.off()

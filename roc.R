@@ -72,27 +72,30 @@ dev.off()
 # ===== Ridge Model ===== #
 ridge_model = cv.glmnet(as.matrix(X_train), y_train, alpha = 0, family = "binomial", nfolds = 5)
 ridge_pred = predict(ridge_model, newx = as.matrix(X_test), s = "lambda.min", type = "response")
-ridge_roc = roc(testData$highBP, as.vector(ridge_pred))
+ridge_roc = roc(y_test, as.vector(ridge_pred))
 
 png("roc_curves/ridge_roc_test.png", width = W, height = H)
 plot(ridge_roc, col = "red", lwd = 2)
 dev.off()
 
 # ===== PCR Model ===== #
-n = ncol(vars) - 1
-pcr_model = pcr(highBP ~ ., data = trainData, ncomp = n, scale = TRUE, validation = "CV")
+pca = prcomp(X_train, center = TRUE, scale = TRUE)
+X_test_pca = as.data.frame(predict(pca, newdata = X_test))
 
-pcr_pred_all = predict(pcr_model, test_df, ncomp = n)
+train_pca_all_df = data.frame(y = y_train, pca$x)
+pcr_model_all = glm(y ~ ., data = train_pca_all_df, family = binomial)
+pcr_pred_all = predict(pcr_model_all, newdata = X_test_pca, type = "response")
 pcr_roc_all = roc(y_test, pcr_pred_all)
 
-pcr_pred_9 = predict(pcr_model, test_df, ncomp = 9)
+train_pca_9_df = data.frame(y = y_train, pca$x[, 1:9])
+pcr_model_9 = glm(y ~ ., data = train_pca_9_df, family = binomial)
+pcr_pred_9 = predict(pcr_model_9, newdata = X_test_pca[1:9], type = "response")
 pcr_roc_9 = roc(y_test, pcr_pred_9)
 
-png("roc_curves/pcr_roc_test.png", width = W, height = H)
+png("roc_curves/pcr_roc_test.png", width = 500, height = 500)
 plot(pcr_roc_all, col = "brown", lwd = 2)
 plot(pcr_roc_9, col = "darkorange", lwd = 2, add = TRUE)
-
-legend("bottomright", legend = c("All Components","9 Components"),
+legend("bottomright", legend = c("All Components", paste(m, "Components")),
        col = c("brown", "darkorange"), lwd = 2)
 dev.off()
 
@@ -107,8 +110,7 @@ plot(pcr_roc_9, col = "darkorange", lwd = 2, add = TRUE)
 
 legend("bottomright",
        legend = c("Standard","LASSO","Group LASSO", "Ridge", "PCR"),
-       col = c("blue","hotpink","darkgreen", "red", "darkorange"),
-       lwd = 2)
+       col = c("blue","hotpink","darkgreen", "red", "darkorange"), lwd = 2)
 
 dev.off()
 

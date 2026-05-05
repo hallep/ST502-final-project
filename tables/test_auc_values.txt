@@ -3,5 +3,5 @@ Logit	0.7797
 LASSO	0.7765
 group LASSO	0.7773
 Ridge	0.7809
-PCR (All)	0.7795
-PCR (9)	0.7646
+PCR (All)	0.7797
+PCR (9)	0.7647
