@@ -136,7 +136,7 @@ area = data.frame("ncomps" = x, "auc" = y)
 pAUC = ggplot(area, aes(x = ncomps, y = auc)) + 
   geom_vline(xintercept = m, color = "dimgray", linewidth = 0.5, linetype = "dashed") +
   geom_line(color = "hotpink", linewidth = 0.8) + 
-  labs(title = "Area Under Curve", x = "Number of Components", y = "AOC") +
+  labs(title = "Area Under Curve", x = "Number of Components", y = "AUC") +
   theme_classic()
 
 # ===== Plots ===== #
